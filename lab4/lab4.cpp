@@ -1,20 +1,48 @@
-﻿// lab4.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
+﻿#include <iostream>
+#include <vector>
+using namespace std;
 
-#include <iostream>
+// Function to implement the LFSR
+vector<int> LFSR(vector<int> initial_state, int m, vector<int> feedback_taps, int output_length) {
+    vector<int> output_stream; // To store the output sequence
+    vector<int> register_state = initial_state; // Copy the initial state into the LFSR register
 
-int main()
-{
-    std::cout << "Hello World!\n";
+    for (int i = 0; i < output_length; ++i) {
+        // Capture the output bit (usually the least significant bit, s_0)
+        output_stream.push_back(register_state[0]);
+
+        // Calculate the feedback bit (XOR of selected feedback taps)
+        int feedback = 0;
+        for (int tap : feedback_taps) {
+            feedback ^= register_state[tap]; // XOR the tapped bits
+        }
+
+        // Shift the register and insert the feedback bit into the most significant position
+        for (int j = 0; j < m - 1; ++j) {
+            register_state[j] = register_state[j + 1];
+        }
+        register_state[m - 1] = feedback; // Set the feedback bit
+    }
+
+    return output_stream;
 }
 
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
+int main() {
+    // Example parameters
+    vector<int> initial_state = { 1, 0, 0 }; // Initial state of the register
+    int m = 3; // Degree of the LFSR
+    vector<int> feedback_taps = { 0, 2 }; // Feedback connections (C(x) = 1 + x + x^3)
+    int output_length = 14; // Length of the output stream
 
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
+    // Run the LFSR
+    vector<int> output = LFSR(initial_state, m, feedback_taps, output_length);
+
+    // Print the output sequence
+    cout << "Output sequence: ";
+    for (int bit : output) {
+        cout << bit << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
