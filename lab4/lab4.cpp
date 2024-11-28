@@ -1,45 +1,48 @@
 ﻿#include <iostream>
 #include <vector>
+
 using namespace std;
 
-// Function to implement the LFSR
-vector<int> LFSR(vector<int> initial_state, int m, vector<int> feedback_taps, int output_length) {
-    vector<int> output_stream; // To store the output sequence
-    vector<int> register_state = initial_state; // Copy the initial state into the LFSR register
+// Funkcja do generowania strumienia bitów z LFSR
+vector<int> lfsr(vector<int> initial_state, vector<int> feedback_taps, int output_length) {
+    vector<int> output_stream;
+    int m = initial_state.size();  // długość rejestru
 
+    // Główna pętla generowania strumienia bitów
     for (int i = 0; i < output_length; ++i) {
-        // Capture the output bit (usually the least significant bit, s_0)
-        output_stream.push_back(register_state[0]);
+        // Pierwszy bit w rejestrze to wyjściowy bit
+        int output_bit = initial_state[0];
+        output_stream.push_back(output_bit);
 
-        // Calculate the feedback bit (XOR of selected feedback taps)
-        int feedback = 0;
+        // Obliczanie bitu sprzężenia zwrotnego
+        int feedback_bit = 0;
         for (int tap : feedback_taps) {
-            feedback ^= register_state[tap]; // XOR the tapped bits
+            feedback_bit ^= initial_state[tap];  // XOR na odpowiednich bitach
         }
 
-        // Shift the register and insert the feedback bit into the most significant position
-        for (int j = 0; j < m - 1; ++j) {
-            register_state[j] = register_state[j + 1];
-        }
-        register_state[m - 1] = feedback; // Set the feedback bit
+        // Przesunięcie rejestru w lewo o jeden bit
+        initial_state.erase(initial_state.begin());  // Usuwamy najstarszy bit
+        initial_state.push_back(feedback_bit);  // Dodajemy obliczony bit sprzężenia zwrotnego na koniec
     }
 
     return output_stream;
 }
 
 int main() {
-    // Example parameters
-    vector<int> initial_state = { 1, 0, 0 }; // Initial state of the register
-    int m = 3; // Degree of the LFSR
-    vector<int> feedback_taps = { 0, 2 }; // Feedback connections (C(x) = 1 + x + x^3)
-    int output_length = 14; // Length of the output stream
+    // Stan początkowy rejestru (przykład: m = 3)
+    vector<int> initial_state = { 0, 0, 1 };
 
-    // Run the LFSR
-    vector<int> output = LFSR(initial_state, m, feedback_taps, output_length);
+    // Połączenia sprzężenia zwrotnego (przykład: C(x) = 1 + x + x^3, więc feedback_taps = {0, 1})
+    vector<int> feedback_taps = { 0, 1 };
 
-    // Print the output sequence
-    cout << "Output sequence: ";
-    for (int bit : output) {
+    // Długość wyjściowego strumienia bitów
+    int output_length = 14;
+
+    // Generowanie strumienia bitów
+    vector<int> output_stream = lfsr(initial_state, feedback_taps, output_length);
+
+    // Wyświetlenie wygenerowanego strumienia bitów
+    for (int bit : output_stream) {
         cout << bit << " ";
     }
     cout << endl;
