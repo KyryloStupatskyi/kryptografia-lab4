@@ -44,17 +44,84 @@ vector<int> lfsr(vector<int> initial_state, vector<int> feedback_taps, int outpu
 
     return output_stream;
 }
+/*
+pair<vector<int>, int> Berlekamp_Massey(const vector<int>& stream) {
+    vector<int> Connections_Polynomial(1);
+    vector<int> Backup_Polynomial(1);
+    int Linear_complexity = 0;
+    int last_update_index = -1;
+    int d = 0;
+    int delta = 0;
+
+    for (int N = 0; N < stream.size() - 1; ++N) {
+        d = stream[N];
+        for (int i = 1; i < Linear_complexity; ++i) {
+            d = d^(Connections_Polynomial[i] * stream[N - i]);
+        }
+        if (d == 0) continue;
+        vector<int>Temp_Polynomial = Connections_Polynomial;
+        delta = N - last_update_index;
+        for (int i = 0; i < Backup_Polynomial.size() - 1; ++i) {
+            Connections_Polynomial[delta+i] = Connections_Polynomial[delta+i]^Backup_Polynomial[i];
+        }
+        if (2*last_update_index <= N) {
+            Linear_complexity = N + 1 - Linear_complexity;
+            Backup_Polynomial = Temp_Polynomial;
+            last_update_index = N;
+        }
+    }
+    pair<vector<int>, int> result;
+    result.first = Connections_Polynomial;
+    result.second = Linear_complexity;
+    return result;
+}
+*/
+
+pair<vector<int>, int> Berlekamp_Massey(const vector<int>& stream) {
+    vector<int> Connections_Polynomial(1, 1);
+    vector<int> Backup_Polynomial(1, 1);
+    int Linear_complexity = 0;
+    int last_update_index = -1;
+
+    for (int N = 0; N < stream.size(); ++N) {
+        int d = stream[N];
+        for (int i = 1; i <= Linear_complexity; ++i) {
+            d ^= Connections_Polynomial[i] * stream[N - i];
+        }
+
+        if (d == 0) continue;
+
+        vector<int> Temp_Polynomial = Connections_Polynomial;
+        int delta = N - last_update_index;
+
+        if (Connections_Polynomial.size() < Backup_Polynomial.size() + delta) {
+            Connections_Polynomial.resize(Backup_Polynomial.size() + delta, 0);
+        }
+
+        for (int i = 0; i < Backup_Polynomial.size(); ++i) {
+            Connections_Polynomial[delta + i] ^= Backup_Polynomial[i];
+        }
+
+        if (2 * Linear_complexity <= N) {
+            Linear_complexity = N + 1 - Linear_complexity;
+            Backup_Polynomial = Temp_Polynomial;
+            last_update_index = N;
+        }
+    }
+
+    return {Connections_Polynomial, Linear_complexity};
+}
 
 int main() {
 
-    //vector<int> initial_state = {1,0,1,0,1,1,0,0,1,1,1,0,0,0,0,1}; // Initial state of the register
+    vector<int> initial_state = {1,0,1,0,1,1,0,0,1,1,1,0,0,0,0,1}; // Initial state of the register
     //vector<int> initial_state = {1,0,0}; // Initial state of the register
-    vector<int> initial_state = {0,1,0,0,1}; // Initial state of the register Zad2_1
+    //vector<int> initial_state = {0,1,0,0,1}; // Initial state of the register Zad2_1
     int m = 5; // Degree of the LFSR
-    //vector<int> feedback_taps = { 10, 13, 12, 15 };
+    vector<int> feedback_taps = { 10, 13, 12, 15 };
     //vector<int> feedback_taps = { 1, 2 };//Zad 1
     //vector<int> feedback_taps = { 2, 4 };//Zad 2_1
-    vector<int> feedback_taps = {1, 3, 4 };//Zad 2_2
+    //vector<int> feedback_taps = {1, 3, 4 };//Zad 2_2
     //int output_length = 14;
     int output_length = 25;
     vector<int> output_stream = LFSR_ALT(initial_state, m, feedback_taps, output_length);
@@ -77,6 +144,14 @@ int main() {
         cout << bit << " ";
     }
     cout << endl;
+
+    pair<vector<int>, int> result = Berlekamp_Massey(output_stream);
+
+    cout << "Result: " << endl;
+    for (int bit : result.first) {
+        cout << bit << " ";
+    }
+    cout << "Linear Complexity: " << result.second << endl;
 
     return 0;
 }
